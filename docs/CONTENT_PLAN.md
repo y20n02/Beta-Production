@@ -210,6 +210,32 @@ flowchart LR
 - Perform 창으로 풀스크린 발표 가능
 - 실시간 시연이 막힐 때를 대비한 백업 영상 1개 (Movie File Out 또는 화면 녹화)
 
+**구현 상태 (2026-10-19, 1차 피드백 반영)**
+- **현실 반영 방식:** 실제 설치와 같은 구조로 미리보기를 만듭니다.
+  - 가상 프로젝터(`cam_projector`, 앞 오른쪽 위에 고정)가 콘텐츠를 렌더합니다. 그 결과 `stage/null_projector`가 실제로 프로젝터에 보낼 그림입니다. 큐브 실루엣 밖은 검정입니다.
+  - 고정된 촬영 카메라(`cam_preview`)가 어두운 합주실의 흰 큐브에 그 그림이 맺힌 모습을 봅니다.
+  - 프로젝터를 향한 면만 밝고, 비스듬하면 어두워지고, 다른 큐브에 가린 곳은 그림자가 집니다. 프로젝터 반대쪽 면은 빛이 닿지 않습니다.
+  - 파티클도 프로젝터 그림의 일부라서 허공이 아니라 큐브 면 위에 맺힙니다. 카메라는 돌지 않고, 움직임은 콘텐츠가 만듭니다.
+- **장면 A "청춘의 청록":** 레퍼런스(숲길 위 깨진 프레임)를 바탕으로 했습니다. 면마다 장(chapter)이 바뀔 때 셋 중 하나를 보여 줍니다.
+  - 회랑: 숲길이 면 안쪽으로 이어지고, 연청록 프레임이 계속 다가옵니다(= 앞으로 나아감). 프레임은 군데군데 끊기고 어긋나 있고(= 불확실함), 끝에는 빛이 있습니다.
+  - 숲빛: 잎 사이로 드는 햇살이 여러 큐브에 이어집니다.
+  - 여백: 어두운 청록 바탕에 얇은 프레임 하나.
+  - 프로젝터 화면 단위로 모자이크 블록·가로 띠 밀림 글리치가 걸리고, 어택에 강해집니다. 곡이 클수록 회랑이 많아지고 빨리 다가옵니다.
+- **구조:** 시안에서는 5번의 COMP들을 둘로 묶었습니다. `/project1/audio`(원곡 분석, 키보드 조작)와 `/project1/stage`(큐브·프로젝터·콘텐츠·미리보기·발표 화면). 최종 화면은 `stage/null_out`이고, `/project1`의 배경으로 연결돼 Perform 창에 나옵니다. TD 기본 예제는 그대로 두었습니다.
+- **코드 (레포 안 파일, TD가 자동으로 다시 읽음):**
+  - `code/py/audio/script_features_callbacks.py`: 원곡 스펙트럼 → `level, low, mid, high, kick, hit, energy`
+  - `code/py/audio/chopexec_controls.py`: 발표용 키
+  - `code/glsl/stage/glsl_hope_*.glsl`: 프로젝터 콘텐츠 (장면 A)
+  - `code/glsl/stage/glsl_particle_*.glsl`: 파티클 (시뮬레이션 없이 계산)
+  - `code/glsl/stage/glsl_trail_pixel.glsl`, `glsl_comp_pixel.glsl`: 파티클 잔상, 글리치, 큐브 마스크 → 프로젝터 출력
+  - `code/glsl/stage/glsl_previs_*.glsl`: 프로젝터 빛 시뮬레이션 (입사각, 그림자, 거리, 접촉 그림자)
+  - `code/glsl/stage/glsl_finish_pixel.glsl`, `glsl_present_pixel.glsl`: 카메라 느낌 색 정리, 발표 화면 구성
+  - `code/dat/stage/table_cubes.tsv`: 가상 큐브 9개의 위치·크기 (임시)
+- **발표 방법:** TD에서 `F1`(Perform 모드) → 화면을 꽉 채움 → `P` 재생/일시정지, `R` 처음부터, `V` 화면 바꾸기(미리보기 / 프로젝터 출력 / 미리보기 + 오른쪽 아래 프로젝터 화면) → `Esc`로 나가기.
+- **조절값:** `audio` Sensitivity·Volume / `stage` View / `stage/glsl_hope` uLook(밝기, 모서리 선 두께, 회랑 프레임 밀도) / `stage/glsl_particle` uPart(크기, 상승 속도, 퍼짐) / `stage/glsl_comp` uGlitch(글리치 세기, 블록 밀도, 잔상) / `stage/glsl_previs` uRoom(방 조명, 프로젝터 검정 레벨, 프로젝터 밝기) / `stage/cam_projector`, `cam_preview` 위치.
+- **성능:** 이 Windows PC에서 60fps (GPU 프레임당 약 3.5ms). 맥북에서는 아직 확인하지 않았습니다.
+- **남은 것:** 백업 영상. 프로젝터 2대 시뮬레이션(카메라와 렌더 하나씩 추가).
+
 ### 8-2. 그다음 — audio COMP 확장
 
 시안의 `audio`는 원곡 파일만 받습니다. 시안 다음에는 합주실의 실제 입력(Focusrite 2채널)을 받도록 확장합니다.
@@ -254,6 +280,6 @@ flowchart LR
 ## 10. 작업 방식 메모
 
 - **개발과 공연 PC 분리:** 개발은 Windows PC(TDMCP + Claude Code), 공연·촬영은 맥북. 맥으로 옮기기 전에 `Beta.toe`가 최신 저장본인지 확인합니다(CLAUDE.md의 저장 방식).
-- **코드는 파일로 (제안):** GLSL 셰이더와 Python 코드는 레포 안 파일(예: `td/shaders/`, `td/scripts/`)로 저장하고 TD의 DAT이 그 파일을 읽게 합니다. `.toe`는 바이너리라 git에서 무엇이 바뀌었는지 안 보이지만, 코드 파일은 보입니다. 중간 발표 시안부터 적용합니다.
+- **코드는 파일로:** GLSL 셰이더, Python 코드, 표 데이터는 레포 안 `code/<glsl|py|dat>/<COMP 경로>/` 파일로 저장하고, TD의 DAT이 그 파일을 읽습니다. `.toe`는 바이너리라 git에서 무엇이 바뀌었는지 안 보이지만, 코드 파일은 보입니다. 중간 발표 시안부터 적용했습니다.
 - **음원은 git 제외:** 원곡 등 오디오 파일은 용량과 저작권 때문에 공개 레포에 올리지 않습니다 (`.gitignore`).
 - **작게 만들기:** 한 번에 연산자 하나나 작은 체인 하나를 만들고, 동작을 확인한 뒤 다음으로 넘어갑니다.
