@@ -1,0 +1,27 @@
+# TouchDesigner 자동 백업 / 크래시 자동 저장
+Backup/
+CrashAutoSave*
+
+# 저장할 때마다 생기는 번호 버전 (Beta.1.toe …). Beta.toe가 항상 최신 저장본
+*.[0-9]*.toe
+
+# TDMCP 로컬 상태 (클라이언트 등록, OAuth 로그)
+.tdmcp/
+
+# TDMCP 이미지 캐시
+.claude/cache/
+
+# TDMCP가 Install Skills로 설치하는 스킬과 매니페스트 (PC마다 다시 설치)
+.claude/skills/td-*
+.claude/skills/.tdmcp-skills.json
+
+# 개인 Claude Code 설정
+.claude/settings.local.json
+
+# TDMCP 컴포넌트: 릴리스에서 받아서 사용 (라이선스상 재배포 제한)
+TDMCP.tox
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
