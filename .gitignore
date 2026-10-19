@@ -21,6 +21,14 @@ CrashAutoSave*
 # TDMCP 컴포넌트: 릴리스에서 받아서 사용 (라이선스상 재배포 제한)
 TDMCP.tox
 
+# 음원·녹음 파일 (용량, 저작권). 원곡 Blue Rock.wav 등은 PC마다 따로 복사
+*.wav
+*.mp3
+*.aif
+*.aiff
+*.flac
+media/
+
 # OS
 Thumbs.db
 desktop.ini
